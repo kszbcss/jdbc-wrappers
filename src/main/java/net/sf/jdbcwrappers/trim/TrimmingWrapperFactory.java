@@ -13,13 +13,25 @@
  */
 package net.sf.jdbcwrappers.trim;
 
+import java.lang.reflect.Proxy;
+import java.sql.ResultSet;
+
 import net.sf.jdbcwrappers.ResultSetType;
-import net.sf.jdbcwrappers.ResultSetWrapper;
+import net.sf.jdbcwrappers.WrappedJdbcObject;
 import net.sf.jdbcwrappers.WrapperFactory;
+import net.sf.jdbcwrappers.WrapperFactory.WrapResultsInvocationHandler;
 
 public class TrimmingWrapperFactory extends WrapperFactory {
-    @Override
-    protected ResultSetWrapper createResultSetWrapper(ResultSetType resultSetType) {
-        return resultSetType == ResultSetType.QUERY ? new TrimmingResultSetWrapper() : super.createResultSetWrapper(resultSetType);
-    }
+	
+	@SuppressWarnings("unchecked")
+	@Override
+	public <T> T wrapIt(Class<T> clazz, Object target) {
+		if(ResultSet.class.equals(clazz) && resultSetType == ResultSetType.QUERY) {
+			TrimmingResultSetInvocationHandler h = new TrimmingResultSetInvocationHandler(this, (ResultSet) target);
+			return (T) Proxy.newProxyInstance(clazz.getClassLoader(), new Class[]{clazz, WrappedJdbcObject.class}, h);
+		} else {
+		 return super.wrapIt(clazz, target);
+		}
+	}
+	
 }

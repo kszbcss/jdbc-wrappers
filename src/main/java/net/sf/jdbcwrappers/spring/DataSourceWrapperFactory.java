@@ -40,7 +40,7 @@ public class DataSourceWrapperFactory implements FactoryBean, InitializingBean {
         if (dataSource == null) {
             throw new Exception("dataSource not set"); 
         }
-        wrappedDataSource = wrapperFactory.wrapDataSource(dataSource);
+        wrappedDataSource = wrapperFactory.wrapIt(DataSource.class, dataSource);
     }
 
     public boolean isSingleton() {

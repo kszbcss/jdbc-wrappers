@@ -20,7 +20,7 @@ import java.sql.SQLException;
 
 import javax.sql.DataSource;
 
-import net.sf.jdbcwrappers.DataSourceWrapper;
+import net.sf.jdbcwrappers.WrappedJdbcObject;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.derby.jdbc.EmbeddedDataSource;
@@ -59,7 +59,7 @@ public class SpringTest {
         ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext("net/sf/jdbcwrappers/spring/beans.xml");
         try {
             DataSource ds = (DataSource)context.getBean("dataSource");
-            assertTrue(ds instanceof DataSourceWrapper);
+            assertTrue(ds instanceof WrappedJdbcObject);
             // Attempt to get a connection
             ds.getConnection().close();
         } finally {

@@ -13,13 +13,19 @@
  */
 package net.sf.jdbcwrappers;
 
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import javax.sql.DataSource;
 
@@ -27,6 +33,7 @@ import javax.sql.DataSource;
  * Wrapper factory base class.
  */
 public class WrapperFactory {
+	
     private boolean allowUnwrap;
 
     public synchronized boolean isAllowUnwrap() {
@@ -36,94 +43,64 @@ public class WrapperFactory {
     public synchronized void setAllowUnwrap(boolean allowUnwrap) {
         this.allowUnwrap = allowUnwrap;
     }
+    
+    public class WrapResultsInvocationHandler<T> implements InvocationHandler {
+    	
+    	private T target;
+    	
+    	public WrapResultsInvocationHandler(T wrappedObject) {
+			this.target = wrappedObject;
+		}
+    	
+    	public T getTarget() {
+    		return target;
+    	}
 
-    protected DataSourceWrapper createDataSourceWrapper() {
-        return new DataSourceWrapper();
-    }
+		@Override
+		public Object invoke(Object proxy, Method method, Object[] args)
+				throws Throwable {
+			if ("unwrap".equals(method.getName()) && args.length == 1 && WrappedJdbcObject.class.equals(args[0])) {
+				return target;
+			} else if ("isWrapperFor".equals(method.getName()) && args.length == 1 && WrappedJdbcObject.class.equals(args[0])) {
+				return true;
+			}
 
-    public final DataSourceWrapper wrapDataSource(DataSource parent) throws SQLException {
-        DataSourceWrapper wrapper = createDataSourceWrapper();
-        wrapper.wrapperFactory = this;
-        wrapper.parent = parent;
-        wrapper.init();
-        return wrapper;
-    }
+			Object result;
+			try {
+				result = method.invoke(target, args);
+			} catch (InvocationTargetException e) {
+				// rethrow any exception from the method invocation
+				throw e.getCause();
+			}
+			// order of the classes is important: subclasses come before classes
+			List<Class<?>> classesToWrap = new ArrayList<Class<?>>();
+			Collections.addAll(classesToWrap, Connection.class,
+					DataSource.class, DatabaseMetaData.class,
+					CallableStatement.class, PreparedStatement.class,
+					Statement.class, ResultSet.class);
 
-    protected ConnectionWrapper createConnectionWrapper() {
-        return new ConnectionWrapper();
-    }
+			for (Class<?> clazz : classesToWrap) {
+				if (clazz.isInstance(result)) {
+					// avoid wrapping the object twice
+					if (result instanceof WrappedJdbcObject<?>) {
+						return result;
+					}  else {
+						return wrapIt(clazz, result);
+					}
+				}
+			}
 
-    public final ConnectionWrapper wrapConnection(Connection parent) throws SQLException {
-        ConnectionWrapper wrapper = createConnectionWrapper();
-        wrapper.wrapperFactory = this;
-        wrapper.parent = parent;
-        wrapper.init();
-        return wrapper;
-    }
+			// TODO: check the weird things: prepared statement has sql
+			// attribute, something had unwrapped connection
+			return result;
 
-    protected StatementWrapper createStatementWrapper() {
-        return new StatementWrapper();
+		}
     }
-
-    final StatementWrapper wrapStatement(Statement parent, Connection connection) throws SQLException {
-        StatementWrapper wrapper = createStatementWrapper();
-        wrapper.wrapperFactory = this;
-        wrapper.parent = parent;
-        wrapper.connection = connection;
-        wrapper.init();
-        return wrapper;
+    
+    @SuppressWarnings("unchecked")
+	public<T> T wrapIt(Class<T> clazz, Object target) {
+    	WrapResultsInvocationHandler<T> h = new WrapResultsInvocationHandler<T>((T) target);
+		return (T) Proxy.newProxyInstance(clazz.getClassLoader(), new Class[]{clazz, WrappedJdbcObject.class}, h);
     }
-
-    protected DatabaseMetaDataWrapper createDatabaseMetaDataWrapper() {
-        return new DatabaseMetaDataWrapper();
-    }
-
-    final DatabaseMetaDataWrapper wrapDatabaseMetaData(DatabaseMetaData parent, Connection connection) throws SQLException {
-        DatabaseMetaDataWrapper wrapper = createDatabaseMetaDataWrapper();
-        wrapper.wrapperFactory = this;
-        wrapper.parent = parent;
-        wrapper.connection = connection;
-        wrapper.init();
-        return wrapper;
-    }
-
-    protected CallableStatementWrapper createCallableStatementWrapper() {
-        return new CallableStatementWrapper();
-    }
-
-    final CallableStatementWrapper wrapCallableStatement(ConnectionWrapper connectionWrapper, CallableStatement parent, String sql) throws SQLException {
-        CallableStatementWrapper wrapper = createCallableStatementWrapper();
-        wrapper.wrapperFactory = this;
-        wrapper.baseWrapper = wrapPreparedStatement(connectionWrapper, parent, sql);
-        wrapper.parent = parent;
-        wrapper.init();
-        return wrapper;
-    }
-
-    protected PreparedStatementWrapper createPreparedStatementWrapper() {
-        return new PreparedStatementWrapper();
-    }
-
-    final PreparedStatementWrapper wrapPreparedStatement(ConnectionWrapper connectionWrapper, PreparedStatement parent, String sql) throws SQLException {
-        PreparedStatementWrapper wrapper = createPreparedStatementWrapper();
-        wrapper.wrapperFactory = this;
-        wrapper.statementWrapper = wrapStatement(parent, connectionWrapper);
-        wrapper.parent = parent;
-        wrapper.sql = sql;
-        wrapper.init();
-        return wrapper;
-    }
-
-    protected ResultSetWrapper createResultSetWrapper(@SuppressWarnings("unused") ResultSetType resultSetType) {
-        return new ResultSetWrapper();
-    }
-
-    final ResultSetWrapper wrapResultSet(ResultSet parent, Statement statement, ResultSetType resultSetType) throws SQLException {
-        ResultSetWrapper wrapper = createResultSetWrapper(resultSetType);
-        wrapper.wrapperFactory = this;
-        wrapper.parent = parent;
-        wrapper.statement = statement;
-        wrapper.init();
-        return wrapper;
-    }
+    
 }
