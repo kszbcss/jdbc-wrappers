@@ -65,7 +65,7 @@ public class TrimmingResultSetInvocationHandler implements InvocationHandler {
 		if(result instanceof String && ("getObject".equals(method.getName()) || "getString".equals(method.getName()))) {
 			String stringResult = (String) result;
 			
-			if(method.getParameterCount() <= 1) {
+			if(method.getParameterCount() < 1) {
 				throw new IllegalStateException("Method signature not expected on class ResultSet: " + method.toGenericString());
 			}
 					
