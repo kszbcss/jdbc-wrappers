@@ -21,7 +21,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>net.sf.jdbc-wrappers</groupId>
     <artifactId>jdbc-wrappers</artifactId>
-    <version>0.9.1-SNAPSHOT</version>
+    <version>0.10.0-SNAPSHOT</version>
     <name>JDBC Wrappers</name>
     <description>
         Provides a set of classes that help intercepting JDBC calls.
@@ -123,52 +123,6 @@
                     </execution>
                 </executions>
             </plugin>
-            <plugin>
-                <artifactId>maven-site-plugin</artifactId>
-                <version>3.0</version>
-                <configuration>
-                    <reportPlugins>
-                        <plugin>
-                            <groupId>org.apache.maven.plugins</groupId>
-                            <artifactId>maven-project-info-reports-plugin</artifactId>
-                            <version>2.4</version>
-                            <configuration>
-                                <dependencyDetailsEnabled>false</dependencyDetailsEnabled>
-                                <dependencyLocationsEnabled>false</dependencyLocationsEnabled>
-                            </configuration>
-                            <reportSets>
-                                <reportSet>
-                                    <reports>
-                                        <report>index</report>
-                                        <report>dependencies</report>
-                                        <report>scm</report>
-                                    </reports>
-                                </reportSet>
-                            </reportSets>
-                        </plugin>
-                        <plugin>
-                            <artifactId>maven-javadoc-plugin</artifactId>
-                            <version>2.8</version>
-                            <configuration>
-                                <links>
-                                    <link>http://java.sun.com/j2se/1.5.0/docs/api/</link>
-                                </links>
-                            </configuration>
-                        </plugin>
-                        <plugin>
-                            <artifactId>maven-checkstyle-plugin</artifactId>
-                            <version>2.5</version>
-                            <configuration>
-                                <configLocation>${basedir}/checkstyle.xml</configLocation>
-                            </configuration>
-                        </plugin>
-                        <plugin>
-                            <artifactId>maven-surefire-report-plugin</artifactId>
-                            <version>2.4.3</version>
-                        </plugin>
-                    </reportPlugins>
-                </configuration>
-            </plugin>
         </plugins>
     </build>
     
@@ -207,28 +161,21 @@
     </licenses>
 
     <scm>
-        <connection>scm:svn:http://jdbc-wrappers.svn.sourceforge.net/svnroot/jdbc-wrappers/trunk</connection>
-        <developerConnection>scm:svn:https://jdbc-wrappers.svn.sourceforge.net/svnroot/jdbc-wrappers/trunk</developerConnection>
-        <url>http://jdbc-wrappers.svn.sourceforge.net/viewvc/jdbc-wrappers/trunk/</url>
+        <connection>scm:git:https://github.com/kszbcss/jdbc-wrappers.git</connection>
+        <developerConnection>scm:git:https://github.com/kszbcss/jdbc-wrappers.git</developerConnection>
+        <url>https://github.com/kszbcss/jdbc-wrappers</url>
     </scm>
     
     <developers>
         <developer>
-            <name>Andreas Veithen</name>
-            <id>veithen</id>
-            <email>andreas DOT veithen AT gmail DOT com</email>
+            <name>Peter Van den Bosch</name>
+            <id>pvdbosch</id>
+            <email>peter DOT vandenbosch0 AT gmail DOT com</email>
         </developer>
     </developers>
     
     <issueManagement>
-        <url>http://sourceforge.net/tracker/?group_id=217533&amp;atid=1040878</url>
+        <url>https://github.com/kszbcss/jdbc-wrappers/issues</url>
     </issueManagement>
-    
-    <distributionManagement>
-        <!-- Use "mvn site:deploy" to upload -->
-        <!-- site>
-            <id>jdbc-wrappers-site</id>
-            <url>scp://shell.sf.net/home/groups/j/jd/jdbc-wrappers/htdocs/</url>
-        </site -->
-    </distributionManagement>
+
 </project>
