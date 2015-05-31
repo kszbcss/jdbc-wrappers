@@ -13,25 +13,16 @@
  */
 package net.sf.jdbcwrappers.trim;
 
-import java.lang.reflect.Proxy;
-import java.sql.ResultSet;
+import javax.sql.DataSource;
 
-import net.sf.jdbcwrappers.ResultSetType;
-import net.sf.jdbcwrappers.WrappedJdbcObject;
+import net.sf.jdbcwrappers.ProxyHelper;
 import net.sf.jdbcwrappers.WrapperFactory;
-import net.sf.jdbcwrappers.WrapperFactory.WrapResultsInvocationHandler;
 
-public class TrimmingWrapperFactory extends WrapperFactory {
-	
-	@SuppressWarnings("unchecked")
+
+public class TrimmingWrapperFactory implements WrapperFactory {
 	@Override
-	public <T> T wrapIt(Class<T> clazz, Object target) {
-		if(ResultSet.class.equals(clazz) && resultSetType == ResultSetType.QUERY) {
-			TrimmingResultSetInvocationHandler h = new TrimmingResultSetInvocationHandler(this, (ResultSet) target);
-			return (T) Proxy.newProxyInstance(clazz.getClassLoader(), new Class[]{clazz, WrappedJdbcObject.class}, h);
-		} else {
-		 return super.wrapIt(clazz, target);
-		}
+	public DataSource wrapDataSource(DataSource dataSource) {
+		return ProxyHelper.createProxy(DataSource.class, new TrimmingDelegateInvocationHandler<DataSource>(dataSource));
 	}
 	
 }

@@ -13,13 +13,17 @@
  */
 package net.sf.jdbcwrappers.trim;
 
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.HashSet;
 import java.util.Set;
 
-import net.sf.jdbcwrappers.ResultSetWrapper;
+import net.sf.jdbcwrappers.ProxyHelper;
+import net.sf.jdbcwrappers.ProxyHelper.MethodInvocation;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -33,17 +37,62 @@ import org.apache.commons.logging.LogFactory;
  * type.
  * 
  * @author Andreas Veithen
+ * @author Peter Van den Bosch
  * @version $Id:TrimmingResultSetWrapper.java 24 2008-06-21 15:08:14Z veithen $
  */
-public class TrimmingResultSetWrapper extends ResultSetWrapper {
-    private final static Log log = LogFactory.getLog(TrimmingResultSetWrapper.class);
+public class TrimmingResultSetInvocationHandler implements InvocationHandler {
     
-    private Set<String> charColumns;
-    private boolean[] isCharColumn;
+	private final static Log LOG = LogFactory.getLog(TrimmingResultSetInvocationHandler.class);
+	private Set<String> charColumns;
+	private boolean[] isCharColumn;
+	private ResultSet target;
+	
+	public TrimmingResultSetInvocationHandler(ResultSet wrappedObject) {
+		this.target = wrappedObject;
+	}
+	
+	@Override
+	/**
+	 * Modifies getObject and getString behavior. 
+	 * If the column is of type <tt>CHAR</tt>, the returned object is
+	 * a {@link String} holding the column value without trailing spaces.
+	 */
+	public Object invoke(Object proxy, Method method, Object[] args)
+			throws Throwable {
+		MethodInvocation methodInvocation = new MethodInvocation(target, method, args);
+		Object result = methodInvocation.invoke();
+
+		if(result instanceof String && ("getObject".equals(method.getName()) || "getString".equals(method.getName()))) {
+			String stringResult = (String) result;
+			
+			if(method.getParameterCount() <= 1) {
+				throw new IllegalStateException("Method signature not expected on class ResultSet: " + method.toGenericString());
+			}
+					
+			if(int.class.equals(method.getParameterTypes()[0])) {
+				int columnIndex = (int) args[0];
+		        return isCharColumn(columnIndex) ? trim(stringResult) : stringResult;
+			} else if (String.class.equals(method.getParameterTypes()[0])) {
+				String columnName = (String) args[0];
+		        return isCharColumn(columnName) ? trim(stringResult) : stringResult;
+			} else {
+				throw new IllegalStateException("Method signature not expected on class ResultSet: " + method.toGenericString());
+			}
+		} else {
+			Class<?> clazz = ProxyHelper.getJdbcClass(result);
+			if (clazz != null
+					&& !ProxyHelper.isWrapped(result, TrimmingResultSetInvocationHandler.class) 
+					&& !ProxyHelper.isWrapped(result, TrimmingDelegateInvocationHandler.class)) {
+				return ProxyHelper.createProxy(clazz, new TrimmingDelegateInvocationHandler<>(result));
+			} else {
+				return result;
+			}
+		}
+	}
     
     private void fetchCharColumns() throws SQLException {
         if (charColumns == null) {
-            ResultSetMetaData metadata = getMetaData();
+            ResultSetMetaData metadata = target.getMetaData();
             int columnCount = metadata.getColumnCount();
             charColumns = new HashSet<String>();
             isCharColumn = new boolean[columnCount];
@@ -53,8 +102,8 @@ public class TrimmingResultSetWrapper extends ResultSetWrapper {
                     isCharColumn[i-1] = true;
                 }
             }
-            if (log.isDebugEnabled()) {
-                log.debug("CHAR columns: " + charColumns);
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("CHAR columns: " + charColumns);
             }
         }
     }
@@ -78,63 +127,4 @@ public class TrimmingResultSetWrapper extends ResultSetWrapper {
         return trimmedLength == length ? string : string.substring(0, trimmedLength);
     }
     
-    /**
-     * Get the value of the designated column as a Java object.
-     * If the column is of type <tt>CHAR</tt>, the returned object is
-     * a {@link String} holding the column value without trailing spaces.
-     * 
-     * @param columnIndex the column index
-     * @return an {@link Object} holding the column value  
-     * @exception SQLException if a database access error occurs
-     */
-    @Override
-    public Object getObject(int columnIndex) throws SQLException {
-        Object result = super.getObject(columnIndex);
-        return result == null || !(result instanceof String) ? result : (isCharColumn(columnIndex) ? trim((String)result) : result);
-    }
-
-    /**
-     * Get the value of the designated column as a Java object.
-     * If the column is of type <tt>CHAR</tt>, the returned object is
-     * a {@link String} holding the column value without trailing spaces.
-     * 
-     * @param columnName the column name
-     * @return an {@link Object} holding the column value  
-     * @exception SQLException if a database access error occurs
-     */
-    @Override
-    public Object getObject(String columnName) throws SQLException {
-        Object result = super.getObject(columnName);
-        return result == null || !(result instanceof String) ? result : (isCharColumn(columnName) ? trim((String)result) : result);
-    }
-    
-    /**
-     * Get the value of the designated column as a {@link String} object.
-     * If the column is of type <tt>CHAR</tt>, the trailing spaces are
-     * stripped from the column value.
-     * 
-     * @param columnIndex the column index
-     * @return the column value  
-     * @exception SQLException if a database access error occurs
-     */
-    @Override
-    public String getString(int columnIndex) throws SQLException {
-        String result = super.getString(columnIndex);
-        return result == null ? null : (isCharColumn(columnIndex) ? trim(result) : result);
-    }
-
-    /**
-     * Get the value of the designated column as a {@link String} object.
-     * If the column is of type <tt>CHAR</tt>, the trailing spaces are
-     * stripped from the column value.
-     * 
-     * @param columnName the column name
-     * @return the column value  
-     * @exception SQLException if a database access error occurs
-     */
-    @Override
-    public String getString(String columnName) throws SQLException {
-        String result = super.getString(columnName);
-        return result == null ? null : (isCharColumn(columnName) ? trim(result) : result);
-    }
 }

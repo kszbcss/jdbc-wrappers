@@ -20,6 +20,10 @@ import net.sf.jdbcwrappers.WrapperFactory;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
 
+/**
+ * Factory to create a DataSource wrapper in a Spring application context. 
+ * 
+ */
 public class DataSourceWrapperFactory implements FactoryBean, InitializingBean {
     private WrapperFactory wrapperFactory;
     private DataSource dataSource;
@@ -40,7 +44,7 @@ public class DataSourceWrapperFactory implements FactoryBean, InitializingBean {
         if (dataSource == null) {
             throw new Exception("dataSource not set"); 
         }
-        wrappedDataSource = wrapperFactory.wrapIt(DataSource.class, dataSource);
+        wrappedDataSource = wrapperFactory.wrapDataSource(dataSource);
     }
 
     public boolean isSingleton() {

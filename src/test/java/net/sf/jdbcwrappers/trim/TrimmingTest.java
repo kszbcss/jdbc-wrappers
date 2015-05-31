@@ -59,7 +59,7 @@ public class TrimmingTest {
         } finally {
             connection.close();
         }
-        dataSource = new TrimmingWrapperFactory().wrapIt(DataSource.class, rawDataSource);
+        dataSource = new TrimmingWrapperFactory().wrapDataSource(rawDataSource);
     }
     
     @AfterClass
