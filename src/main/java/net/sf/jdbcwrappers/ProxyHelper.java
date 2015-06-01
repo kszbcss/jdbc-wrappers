@@ -31,6 +31,16 @@ import javax.sql.DataSource;
 
 public class ProxyHelper {
 	
+	// order of the classes is important: subclasses come before classes
+	// TODO: RowSet not supported at the moment
+	private static final List<Class<?>> CLASSES_TO_WRAP = new ArrayList<Class<?>>();
+	static {
+		Collections.addAll(CLASSES_TO_WRAP, Connection.class,
+			DataSource.class, DatabaseMetaData.class,
+			CallableStatement.class, PreparedStatement.class,
+			Statement.class, ResultSet.class);
+	}
+	
 	/**
 	 * Helper class representing a method invocation 
 	 */
@@ -79,14 +89,7 @@ public class ProxyHelper {
 	 * @return If target is an instance of a jdbc class, return the class, otherwise null.   
 	 */
 	public static Class<?> getJdbcClass(Object target) {
-		// order of the classes is important: subclasses come before classes
-		List<Class<?>> classesToWrap = new ArrayList<Class<?>>();
-		Collections.addAll(classesToWrap, Connection.class,
-				DataSource.class, DatabaseMetaData.class,
-				CallableStatement.class, PreparedStatement.class,
-				Statement.class, ResultSet.class);
-
-		for (Class<?> clazz : classesToWrap) {
+		for (Class<?> clazz : CLASSES_TO_WRAP) {
 			if (clazz.isInstance(target)) {
 				return clazz;
 			}
@@ -108,7 +111,7 @@ public class ProxyHelper {
 	}
 	
 	/**
-	 * Check whether the target object is actually a proxy using the given InvocationHandler. 
+	 * Check whether the target object is a proxy instance which is using the given InvocationHandler. 
 	 */
 	public static boolean isWrapped(Object target, Class<? extends InvocationHandler> invocationHandlerClazz) {
 		if(target instanceof Proxy) {
