@@ -73,8 +73,8 @@ public class TrimmingResultSetInvocationHandler implements InvocationHandler {
 				int columnIndex = (int) args[0];
 		        return isCharColumn(columnIndex) ? trim(stringResult) : stringResult;
 			} else if (String.class.equals(method.getParameterTypes()[0])) {
-				String columnName = (String) args[0];
-		        return isCharColumn(columnName) ? trim(stringResult) : stringResult;
+				String columnLabel = (String) args[0];
+		        return isCharColumn(columnLabel) ? trim(stringResult) : stringResult;
 			} else {
 				throw new IllegalStateException("Method signature not expected on class ResultSet: " + method.toGenericString());
 			}
@@ -98,7 +98,7 @@ public class TrimmingResultSetInvocationHandler implements InvocationHandler {
             isCharColumn = new boolean[columnCount];
             for (int i = 1; i <= columnCount; i++) {
                 if (metadata.getColumnType(i) == Types.CHAR) {
-                    charColumns.add(metadata.getColumnName(i).toUpperCase());
+                    charColumns.add(metadata.getColumnLabel(i).toUpperCase());
                     isCharColumn[i-1] = true;
                 }
             }
@@ -113,9 +113,9 @@ public class TrimmingResultSetInvocationHandler implements InvocationHandler {
         return isCharColumn[columnIndex-1];
     }
     
-    private boolean isCharColumn(String columnName) throws SQLException {
+    private boolean isCharColumn(String columnLabel) throws SQLException {
         fetchCharColumns();
-        return charColumns.contains(columnName.toUpperCase());
+        return charColumns.contains(columnLabel.toUpperCase());
     }
     
     private String trim(String string) {

@@ -87,16 +87,16 @@ public class TrimmingTest {
     public void testStatement() throws SQLException {
         Statement statement = connection.createStatement();
         try {
-            ResultSet rs = statement.executeQuery("SELECT * FROM TEST");
+            ResultSet rs = statement.executeQuery("SELECT INT_COL, CHAR_COL, VARCHAR_COL, CHAR_COL2 AS MYCHARLABEL FROM TEST");
             rs.next();
             assertEquals("test", rs.getString(2));
             assertEquals("test", rs.getString("CHAR_COL"));
             assertEquals("test", rs.getObject(2));
             assertEquals("test", rs.getObject("CHAR_COL"));
             assertEquals("test2", rs.getString(4));
-            assertEquals("test2", rs.getString("CHAR_COL2"));
+            assertEquals("test2", rs.getString("MYCHARLABEL"));
             assertEquals("test2", rs.getObject(4));
-            assertEquals("test2", rs.getObject("CHAR_COL2"));
+            assertEquals("test2", rs.getObject("MYCHARLABEL"));
         }
         finally {
             statement.close();
