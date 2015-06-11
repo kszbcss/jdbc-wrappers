@@ -33,8 +33,8 @@ public class RecursiveProxy<T> implements InvocationHandler {
 		Object result = methodInvocation.invoke();
 		
 		Class<?> clazz = ProxyHelper.getJdbcClass(result);
-		if (clazz != null && !ProxyHelper.isWrapped(target, RecursiveProxy.class)) {
-			return ProxyHelper.createProxy(clazz, new RecursiveProxy<T>(target));
+		if (clazz != null && !ProxyHelper.isWrapped(result, RecursiveProxy.class)) {
+			return ProxyHelper.createProxy(clazz, new RecursiveProxy<Object>(result));
 		}
 
 		return result;

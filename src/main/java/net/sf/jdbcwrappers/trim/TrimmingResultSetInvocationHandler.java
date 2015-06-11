@@ -70,7 +70,7 @@ public class TrimmingResultSetInvocationHandler implements InvocationHandler {
 			}
 					
 			if(int.class.equals(method.getParameterTypes()[0])) {
-				int columnIndex = (int) args[0];
+				int columnIndex = (Integer) args[0]; 
 		        return isCharColumn(columnIndex) ? trim(stringResult) : stringResult;
 			} else if (String.class.equals(method.getParameterTypes()[0])) {
 				String columnLabel = (String) args[0];
@@ -83,7 +83,7 @@ public class TrimmingResultSetInvocationHandler implements InvocationHandler {
 			if (clazz != null
 					&& !ProxyHelper.isWrapped(result, TrimmingResultSetInvocationHandler.class) 
 					&& !ProxyHelper.isWrapped(result, TrimmingDelegateInvocationHandler.class)) {
-				return ProxyHelper.createProxy(clazz, new TrimmingDelegateInvocationHandler<>(result));
+				return ProxyHelper.createProxy(clazz, new TrimmingDelegateInvocationHandler<Object>(result));
 			} else {
 				return result;
 			}

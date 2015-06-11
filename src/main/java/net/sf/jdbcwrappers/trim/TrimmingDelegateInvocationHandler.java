@@ -53,7 +53,7 @@ public class TrimmingDelegateInvocationHandler<T> implements InvocationHandler {
 				if(target instanceof Statement && ResultSet.class.equals(clazz) && !"getGeneratedKeys".equals(method.getName())) {
 					return ProxyHelper.createProxy(ResultSet.class, new TrimmingResultSetInvocationHandler((ResultSet) result));
 				} else {
-					return ProxyHelper.createProxy(clazz, new TrimmingDelegateInvocationHandler<>(result));
+					return ProxyHelper.createProxy(clazz, new TrimmingDelegateInvocationHandler<Object>(result));
 				}
 		} 
 
