@@ -16,7 +16,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>net.sf.jdbc-wrappers</groupId>
     <artifactId>jdbc-wrappers</artifactId>
-    <version>0.10.0</version>
+    <version>0.10.0-SNAPSHOT</version>
     <name>JDBC Wrappers</name>
     <description>
         Provides a set of classes that help intercepting JDBC calls.
@@ -141,7 +141,6 @@
         <connection>scm:git:https://github.com/kszbcss/jdbc-wrappers.git</connection>
         <developerConnection>scm:git:https://github.com/kszbcss/jdbc-wrappers.git</developerConnection>
         <url>https://github.com/kszbcss/jdbc-wrappers</url>
-    <tag>jdbc-wrappers-0.10.0</tag>
   </scm>
     
     <developers>
